@@ -1,7 +1,7 @@
 <p align="center">
   <img src="https://raw.githubusercontent.com/data-centt/percentify/main/asset/log.png" alt="Percentify logo" height="150">
 </p>
-
+[![Downloads](https://img.shields.io/pypi/dm/percentify)](https://pypi.org/project/percentify/)
 [![PyPI version](https://img.shields.io/pypi/v/percentify.svg?style=flat&color=blue)](https://pypi.org/project/percentify/)
 [![Python Version](https://img.shields.io/badge/python-%3E%3D3.10-green?style=flat)](https://pypi.org/project/percentify/)
 [![License](https://img.shields.io/pypi/l/percentify.svg?style=flat&color=orange)](LICENSE)
