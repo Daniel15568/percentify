@@ -30,9 +30,12 @@ def test_missing_polars_values():
     df = pl.DataFrame({"salary": [1.0, None, 3.0, None], "age": [1.0, 2.0, None, 4.0]})
     result = missing(df)
     assert isinstance(result, pl.DataFrame)
+    assert result.columns == ["column", "missing_pct", "has_missing"]
     d = dict(zip(result["column"].to_list(), result["missing_pct"].to_list()))
     assert d["salary"] == 50.0
     assert d["age"] == 25.0
+    flags = dict(zip(result["column"].to_list(), result["has_missing"].to_list()))
+    assert flags == {"salary": True, "age": True}
 
 
 def test_cv_polars_dataframe():
@@ -145,6 +148,25 @@ def test_correlate_polars_two_series_tuple():
     r, p = correlate(pl.Series(range(50)), pl.Series(range(50)))
     assert isinstance(r, float)
     assert r == 1.0
+
+
+def test_correlate_polars_log_p_dataframe():
+    np.random.seed(0)
+    base = np.random.randn(200)
+    df = pl.DataFrame({"a": base, "b": base * 2 + np.random.randn(200) * 0.1,
+                       "c": np.random.randn(200)})
+    result = correlate(df, log_p=True)
+    assert isinstance(result, pl.DataFrame)          # polars in -> polars out
+    assert result.columns == ["feature_1", "feature_2", "r", "p", "log10_p"]
+
+
+def test_correlate_polars_log_p_two_series():
+    np.random.seed(0)
+    a = np.random.randn(200)
+    b = 0.44 * a + np.sqrt(1 - 0.44 ** 2) * np.random.randn(200)
+    r, p, log10_p = correlate(pl.Series(a), pl.Series(b), log_p=True)
+    assert isinstance(log10_p, float)
+    assert log10_p < 0
 
 
 def test_skew_report_polars():

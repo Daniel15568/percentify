@@ -10,9 +10,25 @@ pip install percentify
 
 Percentify requires Python 3.10+, `numpy`, and `pandas` 2.0+.
 
+## Import convention
+
+Percentify's alias is **`pcy`**:
+
+```python
+import percentify as pcy
+
+pcy.missing(df)
+pcy.profiler(df, target="churn")
+```
+
+Every function is available on the namespace. Importing functions directly works
+too, and is what the examples on this page use so each call stays on one line:
+
 ```python
 from percentify import change, vif, missing, cv, outliers, pca_variance, pca_loadings
 ```
+
+The two styles are interchangeable. Pick one and stay with it.
 
 ---
 
@@ -85,7 +101,10 @@ severity         code   column                          message                 
     info    imbalance <target> class 'Yes' is only 4.0% of rows consider resampling or class weights
 ```
 
-The report renders as a compact, color-coded summary in notebooks and terminals, and exposes everything programmatically:
+The report renders as a compact, color-coded summary in notebooks and terminals.
+Its column and target tables show missing percentages to two decimal places and
+a separate **Has Missing** Yes/No flag, while retaining the distinct-value count.
+It also exposes everything programmatically:
 
 - `report.errors`, `report.warnings`, `report.infos`: findings filtered by severity.
 - `report.to_frame()`: all findings as a tidy DataFrame.
@@ -230,7 +249,8 @@ vif(df, flag=5.0)
 
 ## `missing`
 
-The percentage of missing values in each column, sorted highest first.
+The percentage of missing values in each column, sorted highest first, plus a
+boolean flag showing whether the column contains any missing value at all.
 
 !!! tip "Similar concept"
     `pandas.DataFrame.isna`
@@ -257,13 +277,16 @@ missing(df)
 ```
 
 ```text
-   column  missing_pct
-0  salary         50.0
-1     age         25.0
-2    city          0.0
+   column  missing_pct  has_missing
+0  salary         50.0         True
+1     age         25.0         True
+2    city          0.0        False
 ```
 
-Unlike the numeric-only functions, `missing` reports on **every** column, text included.
+Unlike the numeric-only functions, `missing` reports on **every** column, text
+included. `missing_pct` uses two decimal places by default. `has_missing` is
+calculated before rounding, so it remains `True` even when a tiny non-zero rate
+rounds to `0.00`.
 
 ---
 
@@ -511,7 +534,7 @@ Correlation with p-values, the piece `df.corr()` leaves out. Pass two Series for
 **Signature**
 
 ```python
-correlate(a, b=None, method="pearson", decimals=2)
+correlate(a, b=None, method="pearson", decimals=2, log_p=False)
 ```
 
 **Two columns return `(r, p)`**
@@ -528,7 +551,7 @@ df = pd.DataFrame({
     "score":  np.random.randn(200),
 })
 
-correlate(df["age"], df["income"])   # (0.99, 0.0)
+correlate(df["age"], df["income"])   # (0.99, 1.7e-166)
 ```
 
 **A DataFrame returns a ranked table**
@@ -538,13 +561,70 @@ correlate(df)
 ```
 
 ```text
-feature_1 feature_2    r    p
-      age    income 0.99 0.00
-      age     score 0.05 0.49
-   income     score 0.05 0.49
+feature_1 feature_2    r             p
+      age    income 0.99 1.700000e-166
+      age     score 0.05  4.900000e-01
+   income     score 0.05  4.900000e-01
 ```
 
 Pass `method="spearman"` for rank (monotonic) correlation.
+
+!!! note "Reading the p-value"
+    When `p` is smaller than the `decimals` resolution it keeps two significant
+    figures (`1.7e-166`) instead of collapsing to a misleading `0.00`. One very
+    small value puts the whole column into scientific notation, so
+    `4.900000e-01` is just `0.49`.
+
+    Read `r` for the strength and `p` only for "is this distinguishable from
+    zero". On a large sample almost any correlation is significant, so a tiny
+    `p` is not evidence of a strong relationship: `r = 0.05` with
+    `p = 1e-20` is still a negligible relationship.
+
+**`p = 0.0` means "too small to represent", not "zero"**
+
+A p-value is never truly zero. But a float has a floor: once `p` drops below
+about `1e-308`, scipy returns a literal `0.0`. `correlate` passes that through
+untouched rather than inventing a number it did not compute.
+
+Pass `log_p=True` to recover the magnitude in log space:
+
+```python
+np.random.seed(0)
+n = 40000
+width  = np.random.randn(n)
+length = 0.44 * width + np.sqrt(1 - 0.44 ** 2) * np.random.randn(n)
+
+correlate(pd.Series(width), pd.Series(length))               # (0.45, 0.0)
+correlate(pd.Series(width), pd.Series(length), log_p=True)   # (0.45, 0.0, -1924.58)
+```
+
+`log10_p = -1924.58` means p is about `10 ** -1924.58`, a number no float can
+hold. In matrix mode it arrives as an extra column:
+
+```python
+correlate(pd.DataFrame({"width": width, "length": length}), log_p=True)
+```
+
+```text
+feature_1 feature_2    r   p  log10_p
+    width    length 0.45 0.0 -1924.58
+```
+
+This is what you want for anything that consumes p on a log scale, such as
+`-log10(p)` volcano plots or combining p-values, where a `0.0` would become
+`inf` and lose the ordering entirely.
+
+!!! tip "How log10_p is computed"
+    Where scipy's `p` is representable, `log10_p` is exactly `log10(p)`. Past
+    the float floor it is computed in log space from the regularized incomplete
+    beta that defines the null distribution, `I_x(df/2, 1/2)` with
+    `x = 1 - r**2`, summed through its hypergeometric series. Checked against an
+    arbitrary-precision reference, agreement is within about `1e-9` log10 units.
+    A perfect correlation reports `-inf`.
+
+    For `method="spearman"` the same transform is applied to rho. That matches
+    the asymptotic scipy itself uses, so like scipy it is an approximation for
+    small samples or heavily tied data.
 
 ---
 
@@ -642,6 +722,12 @@ permutation_test(a, b, random_state=0)   # 0.001
 ```
 
 The default statistic is the difference in means; pass your own `statistic(a, b)` for anything else. It returns the number, not a pass or fail verdict, so the judgement stays with you.
+
+!!! note "The smallest p this test can report"
+    A permutation test can only resolve down to `1 / (n_permutations + 1)`, so
+    with the default 1000 shuffles the floor is `0.001`. That is a limit of the
+    shuffling, not proof the effect is that rare. Raise `n_permutations` to
+    resolve further. The result is never rounded down to `0.0`.
 
 ---
 
