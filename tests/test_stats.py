@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 import pandas as pd
 from percentify import (
-    change, vif, missing, cv, outliers, pca_variance, pca_loadings, imbalance,
+    change, vif, missing, cv, outliers, pca_variance, pca_loadings, pca_transform, imbalance,
     difference, split, display, PercentifyWarning,
 )
 
@@ -533,6 +533,68 @@ def test_pca_loadings_custom_decimals(independent_df):
         parts = str(float(val)).split(".")
         if len(parts) == 2:
             assert len(parts[1]) <= 3
+
+
+# ===== pca_transform =====
+
+def test_pca_transform_returns_scores_and_preserves_pandas_index():
+    df = pd.DataFrame(
+        {
+            "height": [160.0, 170.0, 180.0, 175.0],
+            "weight": [55.0, 68.0, 82.0, 74.0],
+            "age": [25.0, 35.0, 45.0, 30.0],
+            "city": ["A", "B", "C", "D"],
+        },
+        index=["a", "b", "c", "d"],
+    )
+
+    result = pca_transform(df)
+
+    assert isinstance(result, pd.DataFrame)
+    assert result.index.tolist() == ["a", "b", "c", "d"]
+    assert result.columns.tolist() == ["PC1", "PC2", "PC3"]
+    assert np.allclose(result.mean().to_numpy(), 0.0)
+
+
+def test_pca_transform_matches_the_reported_loadings(independent_df):
+    result = pca_transform(independent_df, decimals=None)
+    loadings = pca_loadings(independent_df, decimals=None).drop(columns="feature")
+    X = independent_df.to_numpy(dtype=float)
+    X = (X - X.mean(axis=0)) / X.std(axis=0, ddof=1)
+
+    np.testing.assert_allclose(result.to_numpy(), X @ loadings.to_numpy())
+
+
+def test_pca_transform_n_components_and_rounding(independent_df):
+    result = pca_transform(independent_df, n_components=2, decimals=3)
+
+    assert result.columns.tolist() == ["PC1", "PC2"]
+    assert result.equals(result.round(3))
+
+
+def test_pca_transform_omits_missing_and_infinite_rows():
+    df = pd.DataFrame(
+        {
+            "a": [1.0, 2.0, np.nan, np.inf, 5.0],
+            "b": [2.0, 4.0, 6.0, 8.0, 10.0],
+        },
+        index=[10, 11, 12, 13, 14],
+    )
+
+    result = pca_transform(df)
+
+    assert result.index.tolist() == [10, 11, 14]
+    assert result.columns.tolist() == ["PC1", "PC2"]
+    assert np.isfinite(result.to_numpy()).all()
+
+
+def test_pca_transform_warns_when_too_few_valid_rows_remain():
+    df = pd.DataFrame({"a": [1.0, np.inf], "b": [2.0, 4.0]})
+
+    with pytest.warns(PercentifyWarning, match="finite rows"):
+        result = pca_transform(df)
+
+    assert result.empty
 
 
 # ===== imbalance =====

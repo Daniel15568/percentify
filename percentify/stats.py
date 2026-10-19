@@ -557,29 +557,12 @@ def pca_transform(
     df: pd.DataFrame, decimals: Optional[int] = None, n_components: Optional[int] = None,
     standardize: bool = True,
 ) -> pd.DataFrame:
-    """Project a DataFrame's numeric features onto principal components.
+    """Return each complete numeric row as principal-component scores.
 
-    This uses the same PCA calculation as :func:`pca_variance` and
-    :func:`pca_loadings`. By default, each feature is standardized before the
-    projection, so scores are based on correlations rather than the original
-    measurement scales. Set ``standardize=False`` for covariance-based PCA.
-
-    Non-numeric columns are ignored and rows containing missing numeric values
-    are omitted. Constant columns are dropped when standardizing because they
-    cannot contribute to a component.
-
-    Args:
-        df: DataFrame with numeric columns.
-        decimals: Number of decimal places to round scores to. If None, scores
-            are returned without rounding.
-        n_components: Number of component columns to return. If None, returns
-            every available component.
-        standardize: If True (default), scale each feature to unit variance
-            before calculating scores.
-
-    Returns:
-        DataFrame with one row per complete input row and columns ``PC1``,
-        ``PC2``, and so on.
+    Uses the same NumPy eigendecomposition as ``pca_variance`` and
+    ``pca_loadings``. Non-numeric columns are ignored and rows with missing or
+    infinite values are omitted. Pandas input returns pandas; the existing
+    backend wrapper gives Polars callers a Polars DataFrame.
     """
     if not isinstance(df, pd.DataFrame):
         raise TypeError(f"pca_transform expects a pandas DataFrame, got {type(df).__name__}.")
@@ -593,7 +576,16 @@ def pca_transform(
         _warn("Not enough data: need at least 2 complete (non-null) rows.")
         return pd.DataFrame()
 
-    X = numeric.values.astype(float)
+    X = numeric.to_numpy(dtype=float, copy=True)
+    finite_rows = np.isfinite(X).all(axis=1)
+    if not finite_rows.all():
+        numeric = numeric.loc[finite_rows]
+        X = X[finite_rows]
+
+    if X.shape[0] < 2:
+        _warn("Not enough data: need at least 2 complete, finite rows for PCA.")
+        return pd.DataFrame()
+
     if standardize:
         scale = X.std(axis=0, ddof=1)
         keep = scale > 0
@@ -608,7 +600,7 @@ def pca_transform(
         X = X - X.mean(axis=0)
 
     eigenvalues, eigenvectors = np.linalg.eigh(np.cov(X, rowvar=False))
-    if eigenvalues.sum() == 0:
+    if eigenvalues.sum() <= 0:
         _warn("All numeric columns are constant - there are no components to transform.")
         return pd.DataFrame()
 
