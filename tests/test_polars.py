@@ -5,7 +5,7 @@ pl = pytest.importorskip("polars")
 import pandas as pd  # noqa: E402
 from percentify import (  # noqa: E402
     change, vif, missing, cv, outliers,
-    pca_variance, pca_loadings, imbalance, difference, split, display,
+    pca_variance, pca_loadings, pca_transform, imbalance, difference, split, display,
     correlate, skew_report, bootstrap_ci, permutation_test, effect_size,
 )
 
@@ -75,6 +75,34 @@ def test_pca_loadings_polars():
     result = pca_loadings(df)
     assert isinstance(result, pl.DataFrame)
     assert result.columns == ["feature", "PC1", "PC2", "PC3"]
+
+
+def test_pca_transform_polars_returns_component_scores():
+    df = pl.DataFrame({
+        "a": [1.0, 2.0, 3.0, 4.0],
+        "b": [2.0, 1.0, 4.0, 3.0],
+        "label": ["a", "b", "c", "d"],
+    })
+
+    result = pca_transform(df, n_components=2)
+
+    assert isinstance(result, pl.DataFrame)
+    assert result.columns == ["PC1", "PC2"]
+    assert result.height == df.height
+    assert np.allclose(result.to_numpy().mean(axis=0), 0.0)
+
+
+def test_pca_transform_polars_omits_invalid_rows():
+    df = pl.DataFrame({
+        "a": [1.0, None, 3.0, 4.0],
+        "b": [2.0, 4.0, 6.0, 8.0],
+    })
+
+    result = pca_transform(df)
+
+    assert isinstance(result, pl.DataFrame)
+    assert result.height == 3
+    assert result.columns == ["PC1", "PC2"]
 
 
 # ===== Series in -> scalar out =====
