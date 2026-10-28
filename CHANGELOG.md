@@ -8,7 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- `CHANGELOG.md` to track changes across versions ([#36](https://github.com/Ad-meliorael/percentify/issues/36))
+- `CHANGELOG.md` to track changes across versions ([#36](https://github.com/Daniel15568/percentify/issues/36))
+
+### Fixed
+- Updated documentation, repository, and badge links for the move to `Daniel15568/percentify`.
 
 ---
 
@@ -25,8 +28,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `profiling.py` / `ProfileReport` – automated data-quality profiler that surfaces missingness, constants, ID-like columns, duplicate rows, dtype mismatches, high cardinality, sentinel values, collinearity, and potential target-leakage findings.
 
 ### Fixed
-- `correlate()`: small p-values no longer round to `0.00`; they are now displayed in scientific notation (e.g. `3.45e-12`). ([PR #35](https://github.com/Ad-meliorael/percentify/pull/35))
-- `split()`: rounding no longer silently drops or gains units when splitting a total into weighted parts. ([PR #32](https://github.com/Ad-meliorael/percentify/pull/32))
+- `correlate()`: small p-values no longer round to `0.00`; they are now displayed in scientific notation (e.g. `3.45e-12`). ([PR #35](https://github.com/Daniel15568/percentify/pull/35))
+- `split()`: rounding no longer silently drops or gains units when splitting a total into weighted parts. ([PR #32](https://github.com/Daniel15568/percentify/pull/32))
 - General bug fixes across `stats.py` to stabilise the new functions.
 
 ### Changed
@@ -95,9 +98,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-[Unreleased]: https://github.com/Ad-meliorael/percentify/compare/v1.0.2...HEAD
-[1.0.2]: https://github.com/Ad-meliorael/percentify/compare/v1.0.0...v1.0.2
-[1.0.0]: https://github.com/Ad-meliorael/percentify/compare/v0.3.0...v1.0.0
-[0.3.0]: https://github.com/Ad-meliorael/percentify/compare/v0.2.0...v0.3.0
-[0.2.0]: https://github.com/Ad-meliorael/percentify/compare/v0.1.4...v0.2.0
-[0.1.4]: https://github.com/Ad-meliorael/percentify/releases/tag/v0.1.4
+[Unreleased]: https://github.com/Daniel15568/percentify/compare/v1.0.2...HEAD
+[1.0.2]: https://github.com/Daniel15568/percentify/compare/v1.0.0...v1.0.2
+[1.0.0]: https://github.com/Daniel15568/percentify/compare/v0.3.0...v1.0.0
+[0.3.0]: https://github.com/Daniel15568/percentify/compare/v0.2.0...v0.3.0
+[0.2.0]: https://github.com/Daniel15568/percentify/compare/v0.1.4...v0.2.0
+[0.1.4]: https://github.com/Daniel15568/percentify/releases/tag/v0.1.4

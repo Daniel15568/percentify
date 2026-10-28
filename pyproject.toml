@@ -26,5 +26,11 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 
+[project.urls]
+Homepage = "https://daniel15568.github.io/percentify/"
+Documentation = "https://daniel15568.github.io/percentify/documentation/"
+Repository = "https://github.com/Daniel15568/percentify"
+Issues = "https://github.com/Daniel15568/percentify/issues"
+
 [tool.setuptools]
 packages = ["percentify"]
