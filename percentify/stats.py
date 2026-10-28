@@ -553,6 +553,71 @@ def pca_loadings(
 
 
 @_backend_aware
+def pca_transform(
+    df: pd.DataFrame, decimals: Optional[int] = None, n_components: Optional[int] = None,
+    standardize: bool = True,
+) -> pd.DataFrame:
+    """Return each complete numeric row as principal-component scores.
+
+    Uses the same NumPy eigendecomposition as ``pca_variance`` and
+    ``pca_loadings``. Non-numeric columns are ignored and rows with missing or
+    infinite values are omitted. Pandas input returns pandas; the existing
+    backend wrapper gives Polars callers a Polars DataFrame.
+    """
+    if not isinstance(df, pd.DataFrame):
+        raise TypeError(f"pca_transform expects a pandas DataFrame, got {type(df).__name__}.")
+
+    numeric = df.select_dtypes(include=[np.number]).dropna()
+    if numeric.shape[1] < 2:
+        _warn("Numeric columns required: pca_transform needs at least 2 numeric columns.")
+        return pd.DataFrame()
+
+    if numeric.shape[0] < 2:
+        _warn("Not enough data: need at least 2 complete (non-null) rows.")
+        return pd.DataFrame()
+
+    X = numeric.to_numpy(dtype=float, copy=True)
+    finite_rows = np.isfinite(X).all(axis=1)
+    if not finite_rows.all():
+        numeric = numeric.loc[finite_rows]
+        X = X[finite_rows]
+
+    if X.shape[0] < 2:
+        _warn("Not enough data: need at least 2 complete, finite rows for PCA.")
+        return pd.DataFrame()
+
+    if standardize:
+        scale = X.std(axis=0, ddof=1)
+        keep = scale > 0
+        if keep.sum() < 2:
+            _warn("Numeric columns required: after dropping constant (zero-variance) "
+                  "columns, fewer than 2 columns remain to standardize for PCA.")
+            return pd.DataFrame()
+        X = X[:, keep]
+        scale = scale[keep]
+        X = (X - X.mean(axis=0)) / scale
+    else:
+        X = X - X.mean(axis=0)
+
+    eigenvalues, eigenvectors = np.linalg.eigh(np.cov(X, rowvar=False))
+    if eigenvalues.sum() <= 0:
+        _warn("All numeric columns are constant - there are no components to transform.")
+        return pd.DataFrame()
+
+    eigenvectors = eigenvectors[:, np.argsort(eigenvalues)[::-1]]
+    if n_components is not None:
+        eigenvectors = eigenvectors[:, :n_components]
+
+    scores = X @ eigenvectors
+    result = pd.DataFrame(
+        scores,
+        index=numeric.index,
+        columns=[f"PC{i + 1}" for i in range(scores.shape[1])],
+    )
+    return result if decimals is None else result.round(decimals)
+
+
+@_backend_aware
 def imbalance(data, decimals: Optional[int] = 2) -> pd.DataFrame:
     """
     Summarize class imbalance in a categorical target column.

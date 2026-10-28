@@ -25,7 +25,7 @@ Every function is available on the namespace. Importing functions directly works
 too, and is what the examples on this page use so each call stays on one line:
 
 ```python
-from percentify import change, vif, missing, cv, outliers, pca_variance, pca_loadings
+from percentify import change, vif, missing, cv, outliers, pca_variance, pca_loadings, pca_transform
 ```
 
 The two styles are interchangeable. Pick one and stay with it.

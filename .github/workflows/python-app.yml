@@ -38,8 +38,8 @@ jobs:
           - { python-version: "3.12", pandas: latest, pin: "" }
           - { python-version: "3.13", pandas: latest, pin: "" }
           # pandas version coverage, on a stable Python.
-          - { python-version: "3.11", pandas: "2.0.3", pin: "pandas==2.0.3 numpy==1.26.4" }
-          - { python-version: "3.11", pandas: "2.1.4", pin: "pandas==2.1.4 numpy==1.26.4" }
+          - { python-version: "3.11", pandas: "2.0.3", pin: "pandas==2.0.3 numpy==1.26.4 pyarrow==25.0.0" }
+          - { python-version: "3.11", pandas: "2.1.4", pin: "pandas==2.1.4 numpy==1.26.4 pyarrow==25.0.0" }
     steps:
       - uses: actions/checkout@v4
 

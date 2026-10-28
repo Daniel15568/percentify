@@ -168,7 +168,7 @@ Variance tells you *how much* of the signal each axis carries; loadings tell you
 
 ```python
 import pandas as pd
-from percentify import pca_variance, pca_loadings
+from percentify import pca_variance, pca_loadings, pca_transform
 
 df = pd.DataFrame({
     "height_cm": [160, 170, 180, 175, 165],
@@ -178,6 +178,7 @@ df = pd.DataFrame({
 
 print(pca_variance(df))    # PC1 carries most of the variance
 print(pca_loadings(df))    # PC1 = (height, weight) with similar signs
+print(pca_transform(df))   # each row expressed as PC1, PC2, PC3 scores
 ```
 
 #### Drop collinear columns before modelling
@@ -231,6 +232,7 @@ print(change(kpis))
 | `outliers` | What percentage of each column are outliers? |
 | `pca_variance` | How much variance does each principal component explain? |
 | `pca_loadings` | What does each principal component consist of? |
+| `pca_transform` | Where does each row sit on the principal components? |
 | `imbalance` | How skewed are the classes in a target column? |
 | `correlate` | Which features move together, and is it significant? |
 | `skew_report` | How skewed is each column, and what transform helps? |
