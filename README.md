@@ -7,6 +7,7 @@
 [![PyPI version](https://img.shields.io/pypi/v/percentify.svg?style=flat&color=blue)](https://pypi.org/project/percentify/)
 [![Python Version](https://img.shields.io/badge/python-%3E%3D3.10-green?style=flat)](https://pypi.org/project/percentify/)
 [![License](https://img.shields.io/pypi/l/percentify.svg?style=flat&color=orange)](LICENSE)
+[![PyPI Downloads](https://static.pepy.tech/personalized-badge/percentify?period=total&units=INTERNATIONAL_SYSTEM&left_color=GREY&right_color=GREEN&left_text=downloads)](https://pepy.tech/projects/percentify)
 [![Docs](https://img.shields.io/badge/docs-percentify-14b8a6)](https://daniel15568.github.io/percentify/)
 [![Build Status](https://github.com/Daniel15568/percentify/actions/workflows/python-app.yml/badge.svg)](https://github.com/Daniel15568/percentify/actions/workflows/python-app.yml)
 [![Polars](https://img.shields.io/badge/Polars-supported-cd792c?style=flat)](https://daniel15568.github.io/percentify/)
