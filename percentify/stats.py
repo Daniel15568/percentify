@@ -814,7 +814,9 @@ def skew_report(df: pd.DataFrame, decimals: Optional[int] = 2) -> pd.DataFrame:
 
     rows = []
     for col in numeric.columns:
-        s = numeric[col].dropna()
+        # Nullable dtypes (Int64, pyarrow) return NA, not NaN, when a statistic
+        # is undefined, so work on plain floats.
+        s = numeric[col].dropna().astype("float64")
         if len(s) < 3:
             sk = kt = float("nan")
         else:
