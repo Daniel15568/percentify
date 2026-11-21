@@ -217,6 +217,30 @@ def test_skew_report_symmetric_suggests_none():
     assert row["suggested_transform"] == "none"
 
 
+@pytest.mark.parametrize("dtype", ["Int64", "Float64", "int64[pyarrow]", "double[pyarrow]"])
+def test_skew_report_nullable_column_with_three_values(dtype):
+    # pandas returns NA rather than NaN for the kurtosis of 3 nullable values.
+    def test_skew_report_nullable_column_with_three_values(dtype):
+    if "[pyarrow]" in dtype:
+        pytest.importorskip("pyarrow")
+    # pandas returns NA rather than NaN for the kurtosis of 3 nullable values.
+    df = pd.DataFrame({"x": pd.array([1, 2, None, 9], dtype=dtype)})
+    df = pd.DataFrame({"x": pd.array([1, 2, None, 9], dtype=dtype)})
+    row = skew_report(df).iloc[0]
+    expected = skew_report(pd.DataFrame({"x": [1.0, 2.0, 9.0]})).iloc[0]
+    assert row["skew"] == expected["skew"]
+    assert np.isnan(row["kurtosis"])
+    assert row["suggested_transform"] == expected["suggested_transform"]
+
+
+@pytest.mark.parametrize("dtype", ["Int64", "Float64"])
+def test_skew_report_nullable_column_matches_float(dtype):
+    values = [1, 2, None, 3, 4, 20]
+    row = skew_report(pd.DataFrame({"x": pd.array(values, dtype=dtype)})).iloc[0]
+    expected = skew_report(pd.DataFrame({"x": pd.array(values, dtype="float64")})).iloc[0]
+    assert row.equals(expected)
+
+
 def test_skew_report_sorted_by_abs_skew():
     np.random.seed(0)
     df = pd.DataFrame({"sym": np.random.randn(500), "skewed": np.random.exponential(1, 500)})
