@@ -3,7 +3,7 @@
 </p>
 
 
-
+[![GitHub stars](https://img.shields.io/github/stars/ad-meliorael/percentify?style=flat&logo=github&color=gold)](https://github.com/ad-meliorael/percentify/stargazers)
 [![PyPI version](https://img.shields.io/pypi/v/percentify.svg?style=flat&color=blue)](https://pypi.org/project/percentify/)
 [![Python Version](https://img.shields.io/badge/python-%3E%3D3.10-green?style=flat)](https://pypi.org/project/percentify/)
 [![License](https://img.shields.io/pypi/l/percentify.svg?style=flat&color=orange)](LICENSE)
