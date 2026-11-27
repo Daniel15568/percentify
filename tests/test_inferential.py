@@ -220,7 +220,6 @@ def test_skew_report_symmetric_suggests_none():
 @pytest.mark.parametrize("dtype", ["Int64", "Float64", "int64[pyarrow]", "double[pyarrow]"])
 def test_skew_report_nullable_column_with_three_values(dtype):
     # pandas returns NA rather than NaN for the kurtosis of 3 nullable values.
-    def test_skew_report_nullable_column_with_three_values(dtype):
     if "[pyarrow]" in dtype:
         pytest.importorskip("pyarrow")
     # pandas returns NA rather than NaN for the kurtosis of 3 nullable values.
